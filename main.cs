@@ -3,72 +3,108 @@ using System.Collections.Generic;
 
 class StudentGradeManagementSystem
 {
-    static Dictionary<int, (string Name, List<int> Grades)> studentRecords = new();
-
-    static void Main()
+    // Define a class to store student information
+    public class Student
     {
-        while (true)
+        public string Name { get; set; }
+        public string ID { get; set; }
+        public List<int> Grades { get; set; }
+
+        public Student(string name, string id)
         {
-            Console.WriteLine("\n--- Student Grade Management System ---");
-            Console.WriteLine("1. Add New Student");
+            Name = name;
+            ID = id;
+            Grades = new List<int>();
+        }
+
+        // Method to calculate average grade
+        public double CalculateAverage()
+        {
+            if (Grades.Count == 0)
+                return 0;
+            int total = 0;
+            foreach (int grade in Grades)
+            {
+                total += grade;
+            }
+            return total / (double)Grades.Count;
+        }
+    }
+
+    // List to store all students
+    static List<Student> students = new List<Student>();
+
+    // Main method to run the program
+    static void Main(string[] args)
+    {
+        bool running = true;
+        while (running)
+        {
+            // Display the menu options
+            Console.WriteLine("Student Grade Management System");
+            Console.WriteLine("1. Add Student");
             Console.WriteLine("2. Assign Grades");
             Console.WriteLine("3. Calculate Average Grade");
             Console.WriteLine("4. View All Students");
             Console.WriteLine("5. Remove Student");
             Console.WriteLine("6. Exit");
-            Console.Write("Choose an option: ");
+            Console.Write("Please select an option: ");
+            string option = Console.ReadLine();
 
-            int choice = int.Parse(Console.ReadLine());
-            switch (choice)
+            switch (option)
             {
-                case 1:
+                case "1":
                     AddStudent();
                     break;
-                case 2:
+                case "2":
                     AssignGrades();
                     break;
-                case 3:
+                case "3":
                     CalculateAverage();
                     break;
-                case 4:
+                case "4":
                     ViewAllStudents();
                     break;
-                case 5:
+                case "5":
                     RemoveStudent();
                     break;
-                case 6:
-                    return;
+                case "6":
+                    running = false;
+                    break;
                 default:
-                    Console.WriteLine("Invalid choice. Try again.");
+                    Console.WriteLine("Invalid option, please try again.");
                     break;
             }
         }
     }
 
+    // Method to add a student
     static void AddStudent()
     {
-        Console.Write("Enter Student ID: ");
-        int id = int.Parse(Console.ReadLine());
-        Console.Write("Enter Student Name: ");
+        Console.Write("Enter student name: ");
         string name = Console.ReadLine();
-        studentRecords[id] = (name, new List<int>());
+        Console.Write("Enter student ID: ");
+        string id = Console.ReadLine();
+        students.Add(new Student(name, id));
         Console.WriteLine("Student added successfully.");
     }
 
+    // Method to assign grades to a student
     static void AssignGrades()
     {
-        Console.Write("Enter Student ID: ");
-        int id = int.Parse(Console.ReadLine());
-        if (studentRecords.ContainsKey(id))
+        Console.Write("Enter student ID to assign grades: ");
+        string id = Console.ReadLine();
+        Student student = FindStudentByID(id);
+        if (student != null)
         {
-            Console.Write("Enter Grade (or -1 to stop): ");
+            Console.Write("Enter grade (0 to stop): ");
             int grade;
-            while ((grade = int.Parse(Console.ReadLine())) != -1)
+            while (int.TryParse(Console.ReadLine(), out grade) && grade >= 0)
             {
-                studentRecords[id].Grades.Add(grade);
-                Console.Write("Enter another grade (or -1 to stop): ");
+                student.Grades.Add(grade);
+                Console.Write("Enter grade (0 to stop): ");
             }
-            Console.WriteLine("Grades added successfully.");
+            Console.WriteLine("Grades assigned successfully.");
         }
         else
         {
@@ -76,22 +112,16 @@ class StudentGradeManagementSystem
         }
     }
 
+    // Method to calculate and display a student's average grade
     static void CalculateAverage()
     {
-        Console.Write("Enter Student ID: ");
-        int id = int.Parse(Console.ReadLine());
-        if (studentRecords.ContainsKey(id))
+        Console.Write("Enter student ID to calculate average: ");
+        string id = Console.ReadLine();
+        Student student = FindStudentByID(id);
+        if (student != null)
         {
-            var grades = studentRecords[id].Grades;
-            if (grades.Count > 0)
-            {
-                double average = grades.Average();
-                Console.WriteLine($"Average Grade for {studentRecords[id].Name}: {average:F2}");
-            }
-            else
-            {
-                Console.WriteLine("No grades assigned yet.");
-            }
+            double average = student.CalculateAverage();
+            Console.WriteLine($"Student {student.Name} ({student.ID}) has an average grade of {average:F2}.");
         }
         else
         {
@@ -99,21 +129,34 @@ class StudentGradeManagementSystem
         }
     }
 
+    // Method to view all students
     static void ViewAllStudents()
     {
-        Console.WriteLine("\n--- Student Records ---");
-        foreach (var student in studentRecords)
+        if (students.Count == 0)
         {
-            Console.WriteLine($"ID: {student.Key}, Name: {student.Value.Name}, Grades: {string.Join(", ", student.Value.Grades)}");
+            Console.WriteLine("No students to display.");
+        }
+        else
+        {
+            Console.WriteLine("Student List:");
+            foreach (var student in students)
+            {
+                Console.WriteLine($"{student.Name} ({student.ID})");
+                Console.WriteLine("Grades: " + string.Join(", ", student.Grades));
+                Console.WriteLine($"Average: {student.CalculateAverage():F2}");
+            }
         }
     }
 
+    // Method to remove a student
     static void RemoveStudent()
     {
-        Console.Write("Enter Student ID: ");
-        int id = int.Parse(Console.ReadLine());
-        if (studentRecords.Remove(id))
+        Console.Write("Enter student ID to remove: ");
+        string id = Console.ReadLine();
+        Student student = FindStudentByID(id);
+        if (student != null)
         {
+            students.Remove(student);
             Console.WriteLine("Student removed successfully.");
         }
         else
@@ -121,5 +164,17 @@ class StudentGradeManagementSystem
             Console.WriteLine("Student not found.");
         }
     }
-}
 
+    // Helper method to find a student by ID
+    static Student FindStudentByID(string id)
+    {
+        foreach (var student in students)
+        {
+            if (student.ID == id)
+            {
+                return student;
+            }
+        }
+        return null;
+    }
+}
