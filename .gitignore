@@ -1,0 +1,8 @@
+# Ignore img folder
+img/
+
+# Ignore all .log files
+*.log
+
+# Ignore all .tmp files
+*.tmp
